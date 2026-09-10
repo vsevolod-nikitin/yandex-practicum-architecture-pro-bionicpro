@@ -42,3 +42,17 @@ services:
       REACT_APP_KEYCLOAK_URL: http://localhost:8080
       REACT_APP_KEYCLOAK_REALM: reports-realm
       REACT_APP_KEYCLOAK_CLIENT_ID: reports-frontend
+
+  bionicpro-auth:
+    image: ${DOCKER_REGISTRY-}bionicproauth
+    container_name: bionicpro-auth
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+    ports:
+      - "7000:8080"
+    build:
+      context: .
+      dockerfile: BionicPro.Auth/Dockerfile
+    depends_on:
+      - keycloak
