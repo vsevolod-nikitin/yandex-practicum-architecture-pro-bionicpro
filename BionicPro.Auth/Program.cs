@@ -52,6 +52,7 @@ namespace BionicPro.Auth
                 options.Authority = builder.Configuration["Keycloak:Authority"];
                 options.ClientId = "reports-frontend";
                 options.ClientSecret = "";
+                options.CallbackPath = "/signin-oidc";
                 options.ResponseType = OpenIdConnectResponseType.Code;
                 options.PushedAuthorizationBehavior = PushedAuthorizationBehavior.Disable;
                 options.UsePkce = true;
@@ -65,6 +66,14 @@ namespace BionicPro.Auth
 
                 options.Events = new OpenIdConnectEvents
                 {
+                    OnRedirectToIdentityProvider = context =>
+                    {
+                        context.ProtocolMessage.IssuerAddress =
+                            $"{context.Options.Authority}/protocol/openid-connect/auth";
+                        context.ProtocolMessage.RedirectUri =
+                            builder.Configuration["Keycloak:RedirectUri"];
+                        return Task.CompletedTask;
+                    },
                     OnRedirectToIdentityProviderForSignOut = context =>
                     {
                         var logoutUri = $"{context.Options.Authority}/protocol/openid-connect/logout";

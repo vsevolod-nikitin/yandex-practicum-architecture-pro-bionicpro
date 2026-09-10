@@ -1,25 +1,33 @@
-import React, { useState } from 'react';
-import { useKeycloak } from '@react-keycloak/web';
+import React, { useState, useEffect } from 'react';
 
 const ReportPage: React.FC = () => {
-  const { keycloak, initialized } = useKeycloak();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch(`${process.env.REACT_APP_AUTH_URL}/api/Auth/token`, { credentials: 'include' })
+      .then(response => {
+        if (response.ok) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      })
+      .catch(() => setIsAuthenticated(false));
+  }, []);
+
+  const handleLogin = () => {
+    window.location.href = `${process.env.REACT_APP_AUTH_URL}/api/Auth/login?returnUrl=${window.location.href}`;
+  };
 
   const downloadReport = async () => {
-    if (!keycloak?.token) {
-      setError('Not authenticated');
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
 
       const response = await fetch(`${process.env.REACT_APP_API_URL}/reports`, {
-        headers: {
-          'Authorization': `Bearer ${keycloak.token}`
-        }
+        credentials: 'include'
       });
 
       
@@ -30,15 +38,11 @@ const ReportPage: React.FC = () => {
     }
   };
 
-  if (!initialized) {
-    return <div>Loading...</div>;
-  }
-
-  if (!keycloak.authenticated) {
+  if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
         <button
-          onClick={() => keycloak.login()}
+          onClick={() => handleLogin()}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
           Login
