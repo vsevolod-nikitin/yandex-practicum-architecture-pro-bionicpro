@@ -7,7 +7,7 @@ using Npgsql;
 namespace BionicPro.Reports
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/reports")]
     [Authorize]
     public class ReportsController : ControllerBase
     {
