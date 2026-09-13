@@ -131,5 +131,54 @@
         "secret": "oNwoLQdvJAvRcL89SydqCWCe5ry1jMgq", 
         "bearerOnly": true
       }
-    ]
+    ],
+    "components": {
+      "org.keycloak.storage.UserStorageProvider": [
+        {
+          "id": "8f4a8d5b-4a6d-4af3-9f15-6f6a7b6c1a01",
+          "name": "openldap",
+          "providerId": "ldap",
+          "providerType": "org.keycloak.storage.ldap.LDAPStorageProvider",
+          "config": {
+            "enabled": ["true"],
+            "priority": ["0"],
+            "editMode": ["READ_ONLY"],
+            "syncRegistrations": ["false"],
+            "importEnabled": ["true"],
+            "connectionUrl": ["ldap://openldap:389"],
+            "usersDn": ["ou=People,dc=example,dc=com"],
+            "authType": ["simple"],
+            "bindDn": ["cn=admin,dc=example,dc=com"],
+            "bindCredential": ["admin"],
+            "usernameLDAPAttribute": ["uid"],
+            "rdnLDAPAttribute": ["uid"],
+            "uuidLDAPAttribute": ["entryUUID"],
+            "userObjectClasses": ["inetOrgPerson"],
+            "searchScope": ["1"],
+            "validatePasswordPolicy": ["false"],
+            "pagination": ["true"],
+            "connectionPooling": ["true"],
+            "cachePolicy": ["DEFAULT"]
+          }
+        }
+      ],
+      "org.keycloak.storage.ldap.mappers.LDAPStorageMapper": [
+        {
+          "id": "8f4a8d5b-4a6d-4af3-9f15-6f6a7b6c1a02",
+          "name": "ldap-role-mapper",
+          "providerId": "role-ldap-mapper",
+          "providerType": "org.keycloak.storage.ldap.mappers.LDAPStorageMapper",
+          "parentId": "8f4a8d5b-4a6d-4af3-9f15-6f6a7b6c1a01",
+          "config": {
+            "roles.dn": ["ou=Groups,dc=example,dc=com"],
+            "role.name.ldap.attribute": ["cn"],
+            "role.object.classes": ["groupOfNames"],
+            "membership.ldap.attribute": ["member"],
+            "membership.user.ldap.attribute": ["uid"],
+            "membership.attribute.type": ["DN"],
+            "mode": ["READ_ONLY"]
+          }
+        }
+      ]
+    }
   }
