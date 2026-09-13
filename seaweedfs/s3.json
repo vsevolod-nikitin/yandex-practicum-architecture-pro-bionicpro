@@ -1,0 +1,14 @@
+{
+  "identities": [
+    {
+      "name": "admin",
+      "credentials": [
+        {
+          "accessKey": "bionicpro",
+          "secretKey": "bionicpro-secret"
+        }
+      ],
+      "actions": ["Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: keycloak_user
       POSTGRES_PASSWORD: keycloak_password
     volumes:
-      - ./postgres-keycloak-data:/var/lib/postgresql/data
+      - keycloak-data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
 
@@ -95,19 +95,6 @@ services:
     depends_on:
       - postgres 
 
-  minio:
-    image: minio/minio:latest
-    container_name: minio
-    ports:
-      - "9000:9000"       
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: minio_admin
-      MINIO_ROOT_PASSWORD: minio_password
-    command: server /data --console-address ":9001"
-    volumes:
-      - minio-data:/data
-
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
@@ -158,7 +145,20 @@ services:
     volumes:
       - clickhouse-data:/var/lib/clickhouse
 
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    container_name: seaweedfs
+    command: server -s3
+    ports:
+      - "8333:8333"
+      - "9333:9333"
+    volumes:
+      - seaweedfs-data:/data
+      - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+
 volumes:
   shared-auth-keys:
   minio-data:
   clickhouse-data:
+  keycloak-data:
+  seaweedfs-data:

@@ -12,10 +12,10 @@ namespace BionicPro.Reports
 
             var s3Config = new AmazonS3Config
             {
-                ServiceURL = "http://minio:9000",
+                ServiceURL = "http://seaweedfs:8333",
                 ForcePathStyle = true
             };
-            builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client("minio_admin", "minio_password", s3Config));
+            builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client("bionicpro", "bionicpro-secret", s3Config));
 
             builder.Services.AddDataProtection()
                 .PersistKeysToFileSystem(new DirectoryInfo(@"/app/shared-auth-keys/"))
