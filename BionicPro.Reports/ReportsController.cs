@@ -46,6 +46,7 @@ namespace BionicPro.Reports
                 // Файл не найден в S3 — продолжаем с базой данных
             }
 
+            // TODO Заменить PostgreSQL на ClickHouse
             using var connection = new NpgsqlConnection(connectionString);
 
             var query = $@"
