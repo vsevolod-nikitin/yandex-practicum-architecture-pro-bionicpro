@@ -153,6 +153,33 @@
         "bearerOnly": true
       }
     ],
+    "identityProviders": [
+      {
+        "alias": "yandex",
+        "displayName": "Yandex ID",
+        "providerId": "oauth2",
+        "enabled": true,
+        "updateProfileFirstLogin": "missing",
+        "trustEmail": true,
+        "storeToken": false,
+        "addReadTokenRoleOnCreate": false,
+        "authenticateByDefault": false,
+        "linkOnly": false,
+        "firstBrokerLoginFlowAlias": "first broker login",
+        "config": {
+          "authorizationUrl": "https://oauth.yandex.ru/authorize",
+          "tokenUrl": "https://oauth.yandex.ru/token",
+          "userInfoUrl": "https://login.yandex.ru/info?format=json",
+          "clientId": "CLIENT_ID",
+          "clientSecret": "CLIENT_SECRET",
+          "defaultScope": "login:info",
+          "useJwksUrl": "false",
+          "loginHint": "false",
+          "acceptsPromptNoneForwardFromClient": "false",
+          "syncMode": "IMPORT"
+        }
+      }
+    ],
     "components": {
       "org.keycloak.storage.UserStorageProvider": [
         {
