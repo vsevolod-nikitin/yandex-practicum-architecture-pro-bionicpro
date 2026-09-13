@@ -1,3 +1,4 @@
+using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 
@@ -8,6 +9,13 @@ namespace BionicPro.Reports
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            var s3Config = new AmazonS3Config
+            {
+                ServiceURL = "http://minio:9000",
+                ForcePathStyle = true
+            };
+            builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client("minio_admin", "minio_password", s3Config));
 
             builder.Services.AddDataProtection()
                 .PersistKeysToFileSystem(new DirectoryInfo(@"/app/shared-auth-keys/"))
