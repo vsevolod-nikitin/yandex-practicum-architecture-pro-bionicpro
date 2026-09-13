@@ -157,9 +157,9 @@
       {
         "alias": "yandex",
         "displayName": "Yandex ID",
-        "providerId": "oauth2",
+        "providerId": "oidc",
         "enabled": true,
-        "updateProfileFirstLogin": "missing",
+        "updateProfileFirstLogin": false,
         "trustEmail": true,
         "storeToken": false,
         "addReadTokenRoleOnCreate": false,
@@ -186,7 +186,6 @@
           "id": "8f4a8d5b-4a6d-4af3-9f15-6f6a7b6c1a01",
           "name": "openldap",
           "providerId": "ldap",
-          "providerType": "org.keycloak.storage.ldap.LDAPStorageProvider",
           "config": {
             "enabled": ["true"],
             "priority": ["0"],
@@ -207,24 +206,25 @@
             "pagination": ["true"],
             "connectionPooling": ["true"],
             "cachePolicy": ["DEFAULT"]
-          }
-        }
-      ],
-      "org.keycloak.storage.ldap.mappers.LDAPStorageMapper": [
-        {
-          "id": "8f4a8d5b-4a6d-4af3-9f15-6f6a7b6c1a02",
-          "name": "ldap-role-mapper",
-          "providerId": "role-ldap-mapper",
-          "providerType": "org.keycloak.storage.ldap.mappers.LDAPStorageMapper",
-          "parentId": "8f4a8d5b-4a6d-4af3-9f15-6f6a7b6c1a01",
-          "config": {
-            "roles.dn": ["ou=Groups,dc=example,dc=com"],
-            "role.name.ldap.attribute": ["cn"],
-            "role.object.classes": ["groupOfNames"],
-            "membership.ldap.attribute": ["member"],
-            "membership.user.ldap.attribute": ["uid"],
-            "membership.attribute.type": ["DN"],
-            "mode": ["READ_ONLY"]
+          },
+          "subComponents": {
+            "org.keycloak.storage.ldap.mappers.LDAPStorageMapper": [
+              {
+                "id": "8f4a8d5b-4a6d-4af3-9f15-6f6a7b6c1a02",
+                "name": "ldap-role-mapper",
+                "providerId": "role-ldap-mapper",
+                "config": {
+                  "use.realm.roles.mapping": ["true"],
+                  "roles.dn": ["ou=Groups,dc=example,dc=com"],
+                  "role.name.ldap.attribute": ["cn"],
+                  "role.object.classes": ["groupOfNames"],
+                  "membership.ldap.attribute": ["member"],
+                  "membership.user.ldap.attribute": ["uid"],
+                  "membership.attribute.type": ["DN"],
+                  "mode": ["READ_ONLY"]
+                }
+              }
+            ]
           }
         }
       ]
