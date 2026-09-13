@@ -1,5 +1,8 @@
 version: '3.8'
 
+include:
+  - ./airflow/docker-compose.yml
+
 services:
   keycloak_db:
     image: postgres:14
@@ -21,6 +24,7 @@ services:
       KC_DB_URL: jdbc:postgresql://keycloak_db:5432/keycloak_db
       KC_DB_USERNAME: keycloak_user
       KC_DB_PASSWORD: keycloak_password
+      KC_HOSTNAME_URL: http://localhost:8080
     command: 
       - start-dev
       - --import-realm
@@ -46,6 +50,7 @@ services:
   bionicpro-auth:
     image: ${DOCKER_REGISTRY-}bionicproauth
     container_name: bionicpro-auth
+    user: "0:0"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 8080
@@ -56,6 +61,8 @@ services:
       dockerfile: BionicPro.Auth/Dockerfile
     depends_on:
       - keycloak
+    volumes:
+      - shared-auth-keys:/app/shared-auth-keys
 
   openldap:
     image: osixia/openldap:1.5.0
@@ -69,3 +76,24 @@ services:
       - LDAP_ADMIN_PASSWORD=admin
     ports:
       - "389:389"
+
+  bionicpro-reports:
+    image: ${DOCKER_REGISTRY-}bionicproreports
+    container_name: bionicpro-reports
+    user: "0:0"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__Reports: "Host=postgres;Database=airflow;Username=airflow;Password=airflow"
+    ports:
+      - "8000:8080" 
+    build:
+      context: .
+      dockerfile: BionicPro.Reports/Dockerfile
+    volumes:
+      - shared-auth-keys:/app/shared-auth-keys
+    depends_on:
+      - postgres 
+
+volumes:
+  shared-auth-keys:
