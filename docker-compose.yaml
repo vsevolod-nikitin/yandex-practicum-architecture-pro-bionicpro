@@ -156,6 +156,18 @@ services:
       - seaweedfs-data:/data
       - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
 
+  nginx:
+    image: nginx:alpine
+    container_name: bionicpro-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - bionicpro-auth
+      - bionicpro-reports
+
 volumes:
   shared-auth-keys:
   minio-data:
