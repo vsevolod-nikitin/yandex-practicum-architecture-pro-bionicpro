@@ -20,3 +20,13 @@
 
 ## Задача 6. Добавьте OAuth 2.0 от Яндекс ID.
 - реализована аутентификация пользователей через внешний Identity Provider от Яндекса. 
+
+# Задание 2. Разработка сервиса отчётов
+
+- настроен DAG `postgres_dag` для Apache Airflow. Конфигурация pipeline расположена в директории `airflow`. Web-интерфейс развертывается по адресу `http://localhost:8090` (логин admin, пароль admin).
+
+![Airflow](screenshots/airflow_dag.png)
+
+После выполнения pipeline суммарный отчет по телеметрии и покупкам попадает в БД.
+
+![DagResults](screenshots/dag_db_results.png)
