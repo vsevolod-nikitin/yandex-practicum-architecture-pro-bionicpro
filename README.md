@@ -30,3 +30,28 @@
 После выполнения pipeline суммарный отчет по телеметрии и покупкам попадает в БД.
 
 ![DagResults](screenshots/dag_db_results.png)
+
+# Процесс получения отчета
+
+1. Заходим по адресу `http://localhost:3000`
+
+![Step 1](screenshots/get_report_step_1.png)
+
+2. После нажатия на кнопку `Login` перенаправляем в Keyclock.
+Доступна аутентификация по логину+паролю, либо через Yandex ID.
+
+Вводим user1@example.com/password123
+
+![Step 2](screenshots/get_report_step_2.png)
+
+3. Из-за включенной MFA производится запрос одноразового кода.
+
+![Step 3](screenshots/get_report_step_3.png)
+
+4. Проходим аутентификацию, получаем Cookies с двумя токенами.
+
+![Step 4](screenshots/get_report_step_4.png)
+
+5. Получаем отчет
+
+![Step 5](screenshots/get_report_step_5.png)
