@@ -1,5 +1,8 @@
 version: '3.8'
 
+include:
+  - ./airflow/docker-compose.yml
+
 services:
   keycloak_db:
     image: postgres:14
@@ -8,9 +11,10 @@ services:
       POSTGRES_USER: keycloak_user
       POSTGRES_PASSWORD: keycloak_password
     volumes:
-      - ./postgres-keycloak-data:/var/lib/postgresql/data
+      - keycloak-data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
+
   keycloak:
     image: quay.io/keycloak/keycloak:21.1
     environment:
@@ -20,6 +24,7 @@ services:
       KC_DB_URL: jdbc:postgresql://keycloak_db:5432/keycloak_db
       KC_DB_USERNAME: keycloak_user
       KC_DB_PASSWORD: keycloak_password
+      KC_HOSTNAME_URL: http://localhost:8080
     command: 
       - start-dev
       - --import-realm
@@ -29,6 +34,7 @@ services:
       - "8080:8080"
     depends_on:
       - keycloak_db
+      
   frontend:
     build:
       context: ./frontend
@@ -40,3 +46,131 @@ services:
       REACT_APP_KEYCLOAK_URL: http://localhost:8080
       REACT_APP_KEYCLOAK_REALM: reports-realm
       REACT_APP_KEYCLOAK_CLIENT_ID: reports-frontend
+
+  bionicpro-auth:
+    image: ${DOCKER_REGISTRY-}bionicproauth
+    container_name: bionicpro-auth
+    user: "0:0"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+    ports:
+      - "7000:8080"
+    build:
+      context: .
+      dockerfile: BionicPro.Auth/Dockerfile
+    depends_on:
+      - keycloak
+    volumes:
+      - shared-auth-keys:/app/shared-auth-keys
+
+  openldap:
+    image: osixia/openldap:1.5.0
+    container_name: openldap
+    command: --copy-service
+    volumes:
+      - ./ldap:/container/service/slapd/assets/config/bootstrap/ldif/custom:ro
+    environment:
+      - LDAP_ORGANISATION=bionicpro
+      - LDAP_DOMAIN=example.com
+      - LDAP_ADMIN_PASSWORD=admin
+    ports:
+      - "389:389"
+
+  bionicpro-reports:
+    image: ${DOCKER_REGISTRY-}bionicproreports
+    container_name: bionicpro-reports
+    user: "0:0"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__Reports: "Host=postgres;Database=airflow;Username=airflow;Password=airflow"
+    ports:
+      - "8000:8080" 
+    build:
+      context: .
+      dockerfile: BionicPro.Reports/Dockerfile
+    volumes:
+      - shared-auth-keys:/app/shared-auth-keys
+    depends_on:
+      - postgres 
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+
+  debezium:
+    image: debezium/connect:2.4
+    container_name: debezium
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: bionicpro_connect_configs
+      OFFSET_STORAGE_TOPIC: bionicpro_connect_offsets
+      STATUS_STORAGE_TOPIC: bionicpro_connect_statuses
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+    depends_on:
+      - kafka
+      - postgres
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:23.8
+    container_name: clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    container_name: seaweedfs
+    command: server -s3 -s3.config=/etc/seaweedfs/s3.json
+    ports:
+      - "8333:8333"
+      - "9333:9333"
+    volumes:
+      - seaweedfs-data:/data
+      - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+
+  nginx:
+    image: nginx:alpine
+    container_name: bionicpro-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - bionicpro-auth
+      - bionicpro-reports
+
+volumes:
+  shared-auth-keys:
+  minio-data:
+  clickhouse-data:
+  keycloak-data:
+  seaweedfs-data:

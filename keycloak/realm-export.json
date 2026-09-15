@@ -1,6 +1,21 @@
 {
     "realm": "reports-realm",
     "enabled": true,
+    "otpPolicyType": "totp",
+    "otpPolicyAlgorithm": "HmacSHA1",
+    "otpPolicyDigits": 6,
+    "otpPolicyPeriod": 30,
+    "requiredActions": [
+      {
+        "alias": "CONFIGURE_TOTP",
+        "name": "Configure OTP",
+        "providerId": "CONFIGURE_TOTP",
+        "enabled": true,
+        "defaultAction": true,
+        "priority": 10,
+        "config": {}
+      }
+    ],
     "roles": {
       "realm": [
         {
@@ -31,6 +46,7 @@
             "temporary": false
           }
         ],
+        "requiredActions": ["CONFIGURE_TOTP"],
         "realmRoles": ["user"]
       },
       {
@@ -46,6 +62,7 @@
             "temporary": false
           }
         ],
+        "requiredActions": ["CONFIGURE_TOTP"],
         "realmRoles": ["user"]
       },
       {
@@ -61,6 +78,7 @@
             "temporary": false
           }
         ],
+        "requiredActions": ["CONFIGURE_TOTP"],
         "realmRoles": ["administrator"]
       },
       {
@@ -76,6 +94,7 @@
             "temporary": false
           }
         ],
+        "requiredActions": ["CONFIGURE_TOTP"],
         "realmRoles": ["prothetic_user"]
       },
       {
@@ -91,6 +110,7 @@
             "temporary": false
           }
         ],
+        "requiredActions": ["CONFIGURE_TOTP"],
         "realmRoles": ["prothetic_user"]
       },
       {
@@ -106,6 +126,7 @@
             "temporary": false
           }
         ],
+        "requiredActions": ["CONFIGURE_TOTP"],
         "realmRoles": ["prothetic_user"]
       }
     ],
@@ -114,9 +135,15 @@
         "clientId": "reports-frontend",
         "enabled": true,
         "publicClient": true,
-        "redirectUris": ["http://localhost:3000/*"],
-        "webOrigins": ["http://localhost:3000"],
-        "directAccessGrantsEnabled": true
+        "redirectUris": ["http://localhost:3000/*", "http://localhost:7000/*"],
+        "webOrigins": ["http://localhost:3000", "http://localhost:7000"],
+        "standardFlowEnabled": true,
+        "directAccessGrantsEnabled": false,
+        "attributes": {
+          "pkce.code.challenge.method": "S256",
+          "use.refresh.tokens": "true",
+          "access.token.lifespan": "60"
+        }
       },
       {
         "clientId": "reports-api",
@@ -125,5 +152,81 @@
         "secret": "oNwoLQdvJAvRcL89SydqCWCe5ry1jMgq", 
         "bearerOnly": true
       }
-    ]
+    ],
+    "identityProviders": [
+      {
+        "alias": "yandex",
+        "displayName": "Yandex ID",
+        "providerId": "oidc",
+        "enabled": true,
+        "updateProfileFirstLogin": false,
+        "trustEmail": true,
+        "storeToken": false,
+        "addReadTokenRoleOnCreate": false,
+        "authenticateByDefault": false,
+        "linkOnly": false,
+        "firstBrokerLoginFlowAlias": "first broker login",
+        "config": {
+          "authorizationUrl": "https://oauth.yandex.ru/authorize",
+          "tokenUrl": "https://oauth.yandex.ru/token",
+          "userInfoUrl": "https://login.yandex.ru/info?format=json",
+          "clientId": "CLIENT_ID",
+          "clientSecret": "CLIENT_SECRET",
+          "defaultScope": "login:info",
+          "useJwksUrl": "false",
+          "loginHint": "false",
+          "acceptsPromptNoneForwardFromClient": "false",
+          "syncMode": "IMPORT"
+        }
+      }
+    ],
+    "components": {
+      "org.keycloak.storage.UserStorageProvider": [
+        {
+          "id": "8f4a8d5b-4a6d-4af3-9f15-6f6a7b6c1a01",
+          "name": "openldap",
+          "providerId": "ldap",
+          "config": {
+            "enabled": ["true"],
+            "priority": ["0"],
+            "editMode": ["READ_ONLY"],
+            "syncRegistrations": ["false"],
+            "importEnabled": ["true"],
+            "connectionUrl": ["ldap://openldap:389"],
+            "usersDn": ["ou=People,dc=example,dc=com"],
+            "authType": ["simple"],
+            "bindDn": ["cn=admin,dc=example,dc=com"],
+            "bindCredential": ["admin"],
+            "usernameLDAPAttribute": ["uid"],
+            "rdnLDAPAttribute": ["uid"],
+            "uuidLDAPAttribute": ["entryUUID"],
+            "userObjectClasses": ["inetOrgPerson"],
+            "searchScope": ["1"],
+            "validatePasswordPolicy": ["false"],
+            "pagination": ["true"],
+            "connectionPooling": ["true"],
+            "cachePolicy": ["DEFAULT"]
+          },
+          "subComponents": {
+            "org.keycloak.storage.ldap.mappers.LDAPStorageMapper": [
+              {
+                "id": "8f4a8d5b-4a6d-4af3-9f15-6f6a7b6c1a02",
+                "name": "ldap-role-mapper",
+                "providerId": "role-ldap-mapper",
+                "config": {
+                  "use.realm.roles.mapping": ["true"],
+                  "roles.dn": ["ou=Groups,dc=example,dc=com"],
+                  "role.name.ldap.attribute": ["cn"],
+                  "role.object.classes": ["groupOfNames"],
+                  "membership.ldap.attribute": ["member"],
+                  "membership.user.ldap.attribute": ["uid"],
+                  "membership.attribute.type": ["DN"],
+                  "mode": ["READ_ONLY"]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
   }
