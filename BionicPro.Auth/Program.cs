@@ -40,6 +40,7 @@ namespace BionicPro.Auth
             {
                 options.Cookie.Name = "reports_session";
                 options.Cookie.HttpOnly = true;
+                options.Cookie.Path = "/api";
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
                 options.SlidingExpiration = true;
                 options.Cookie.SameSite = SameSiteMode.Lax;
@@ -58,7 +59,7 @@ namespace BionicPro.Auth
                 options.UsePkce = true;
                 options.RefreshOnIssuerKeyNotFound = true;
                 options.RequireHttpsMetadata = false;
-                options.SaveTokens = false;
+                options.SaveTokens = true;
                 options.Scope.Clear();
                 options.Scope.Add("openid");
                 options.Scope.Add("profile");

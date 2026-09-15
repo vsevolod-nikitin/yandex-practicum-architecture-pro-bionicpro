@@ -26,6 +26,7 @@ namespace BionicPro.Reports
                 {
                     options.Cookie.Name = "reports_session";
                     options.Cookie.HttpOnly = true;
+                    options.Cookie.Path = "/api";
                     options.Cookie.SameSite = SameSiteMode.Lax;
                     options.CookieManager = new ChunkingCookieManager();
                 });

@@ -9,7 +9,7 @@ namespace BionicPro.Auth
 {
     [ApiController]
     [Route("api/auth")]
-    public class AuthController : ControllerBase
+    public class AuthController(ILogger<AuthController> logger) : ControllerBase
     {
         [HttpGet("login")]
         [AllowAnonymous]
@@ -38,6 +38,7 @@ namespace BionicPro.Auth
 
             if (string.IsNullOrEmpty(accessToken))
             {
+                logger.LogWarning("Access token is missing for user {User}.", User.Identity?.Name);
                 return Unauthorized("Токен отсутствует.");
             }
 

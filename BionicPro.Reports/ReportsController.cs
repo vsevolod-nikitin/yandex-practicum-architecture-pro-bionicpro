@@ -14,7 +14,9 @@ namespace BionicPro.Reports
     [ApiController]
     [Route("api/reports")]
     [Authorize]
-    public class ReportsController(IConfiguration configuration, IAmazonS3 s3Client) : ControllerBase
+    public class ReportsController(
+        IConfiguration configuration,
+         IAmazonS3 s3Client) : ControllerBase
     {
         private const string BucketName = "reports";
 
@@ -31,15 +33,15 @@ namespace BionicPro.Reports
             }
 
             var datePath = $"year={DateTime.UtcNow:yyyy}/month={DateTime.UtcNow:MM}/day={DateTime.UtcNow:dd}";
-            var s3Key = $"{datePath}/buyer_{currentUserId}.json";
+            var s3Key = $"{datePath}/customer_{currentUserId}.json";
 
             try
             {
-                await s3Client.GetObjectMetadataAsync(BucketName, s3Key);
+                using var getResponse = await s3Client.GetObjectAsync(BucketName, s3Key);
+                using var reader = new StreamReader(getResponse.ResponseStream);
+                var contentBody = await reader.ReadToEndAsync();
 
-                // Файл есть в S3 — генерируем временную подписанную ссылку напрямую на MinIO
-                var url = GetS3Url(s3Key);
-                return Ok(new { url, source = "S3_Storage" });
+                return Ok(contentBody);
             }
             catch (AmazonS3Exception ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
@@ -51,16 +53,16 @@ namespace BionicPro.Reports
 
             var query = $@"
                 SELECT 
-                    buyer_id AS BuyerId, 
+                    customer_id AS CustomerId, 
                     total_orders AS TotalOrders, 
                     total_spent AS TotalSpent, 
                     total_discount AS TotalDiscount, 
                     avg_sensor_value AS AvgSensorValue, 
                     max_power AS MaxPower 
-                FROM buyer_summary_report;";
+                FROM customer_summary_report;";
 
             var reportData = await connection.QueryAsync<CustomerSummaryReport>(query);
-            var reportAsJson = JsonSerializer.Serialize(reportData);
+            var reportAsJson = JsonSerializer.Serialize(reportData.First());
 
             if (!await AmazonS3Util.DoesS3BucketExistV2Async(s3Client, BucketName))
             {
@@ -76,21 +78,7 @@ namespace BionicPro.Reports
                 };
             await s3Client.PutObjectAsync(putRequest);
 
-            var newUrl = GetS3Url(s3Key);
-            return Ok(new { newUrl, source = "S3_Storage" });
-        }
-
-        private string GetS3Url(string s3Key)
-        {
-            var request = new GetPreSignedUrlRequest
-            {
-                BucketName = BucketName,
-                Key = s3Key,
-                Expires = DateTime.UtcNow.AddHours(1),
-                Verb = HttpVerb.GET
-            };
-
-            return s3Client.GetPreSignedURL(request);
+            return Ok(reportAsJson);
         }
     }
 }
